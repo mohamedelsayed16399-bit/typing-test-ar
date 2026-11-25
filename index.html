@@ -14,6 +14,9 @@
   --txt:#e8eaf6;--dim:#8b90b8;--acc:#ffd166;--acc2:#7c5cff;
   --ok:#4ade80;--bad:#f87171;--cur:#ffd166;
 }
+[data-theme=light]{--bg:#f4f5fb;--bg2:#ffffff;--card:#eef0f9;--line:#d4d8ec;--txt:#1d2242;--dim:#5b608c;--acc:#b45309;--acc2:#7c5cff}
+[data-theme=light] body{background:#f4f5fb}
+[data-theme=light] .modes button.on,[data-theme=light] .btn.p{color:#fff}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{
@@ -123,6 +126,7 @@ footer a{color:var(--acc);text-decoration:none}
 <header>
   <div class="brand">سرعتك <span>بالعربي</span></div>
   <div class="best" id="bestBox" style="display:none">أفضل نتيجة: <b id="bestV">-</b> كلمة/دقيقة</div>
+  <button class="sndBtn" id="themeBtn" title="الشكل">☀️</button>
   <button class="sndBtn" id="sndBtn" title="الصوت">🔊</button>
 </header>
 
@@ -137,6 +141,7 @@ footer a{color:var(--acc);text-decoration:none}
   <button id="tashBtn">بالتشكيل</button>
   <button id="textsBtn">📖 نصوص</button>
   <button id="drillBtn">🎯 تدريب أخطائي</button>
+  <button id="sentBtn">💬 جمل</button>
 </div>
 
 <div class="stats">
@@ -174,6 +179,7 @@ footer a{color:var(--acc);text-decoration:none}
       <div class="g"><div class="v" id="rBad">0</div><div class="l">كلمات غلط</div></div>
       <div class="g"><div class="v" id="rCons">0%</div><div class="l">الثبات</div></div>
       <div class="g"><div class="v" id="rTime">0</div><div class="l">الوقت (ثانية)</div></div>
+      <div class="g"><div class="v" id="rStreak">0</div><div class="l">أطول سلسلة صح</div></div>
     </div>
     <canvas id="chart" width="1040" height="260"></canvas>
     <div class="errs" id="errBox" style="display:none">
@@ -211,7 +217,8 @@ const TEXTS=[
 "الصديق وقت الضيق صديق حقيقي والكلمة الطيبة صدقة ومن حفر حفرة لأخيه وقع فيها",
 "إذا كنت في كل الأمور معاتبا صديقك لم تلق الذي لا تعاتبه"
 ];
-let texts=false,drill=false;
+let texts=false,drill=false,sent=false;
+const SENTS=["إيه الأخبار يا صاحبي؟","النهارده الجو حلو جدًا.","عايز أشرب شاي بالنعناع.","يلا بينا نمشي بدري.","المذاكرة مهمة بس الراحة أهم.","كل سنة وأنت طيب يا غالي!","بكرة يوم جديد وأمل جديد.","الضحك بيطول العمر، صدقني.","خد بالك من نفسك كويس أوي.","إن شاء الله كل حاجة هتبقى تمام.","القهوة الصبح ليها طعم تاني.","ماتيجي نلعب جولة سريعة؟"];
 function errTotals(){try{return JSON.parse(localStorage.getItem(LS+"-e")||"{}")}catch(e){return{}}}
 const KB_ROWS=["ض ص ث ق ف غ ع ه خ ح ج د".split(" "),"ش س ي ب ل ا ت ن م ك ط".split(" "),"ئ ء ؤ ر لا ى ة و ز ظ".split(" ")];
 let S=null;
@@ -226,6 +233,13 @@ function pickWords(){
     const src=pool.length>=10?pool:BANK;
     const out=[];
     for(let i=0;i<(mode==="words"?val:100);i++)out.push(src[Math.floor(Math.random()*src.length)]);
+    return out;
+  }
+  if(sent){
+    let out=[];
+    while(out.length<(mode==="words"?val:120)){
+      out=out.concat(SENTS[Math.floor(Math.random()*SENTS.length)].split(" "));
+    }
     return out;
   }
   if(texts){
@@ -285,7 +299,7 @@ function newTest(){
   const cb=$("chal");
   if(CHAL>0){cb.style.display="block";cb.textContent="⚔️ صاحبك جاب "+CHAL+" كلمة/دقيقة — جاهز تتغلب عليه؟"}else{cb.style.display="none"}
   S={words:pickWords(),wi:0,ci:0,typed:[""],started:false,startT:0,elapsed:0,
-     okChars:0,badChars:0,okWords:0,badWords:0,errMap:{},wpmSeries:[],timer:null,done:false};
+     okChars:0,badChars:0,okWords:0,badWords:0,errMap:{},wpmSeries:[],timer:null,done:false,streak:0,bestStreak:0};
   $("ov").classList.remove("show");
   $("card").classList.remove("show");
   $("shareBtn").style.display="none";$("dlBtn").style.display="none";
@@ -299,7 +313,7 @@ function showBest(){
   $("bestBox").style.display=b?"block":"none";
   if(b)$("bestV").textContent=b;
 }
-function modeKey(){return mode+"-"+val+(tash?"-t":"")+(texts?"-x":"")+(drill?"-d":"")}
+function modeKey(){return mode+"-"+val+(tash?"-t":"")+(texts?"-x":"")+(drill?"-d":"")+(sent?"-s":"")}
 function updHUD(){
   if(!S)return;
   let t;
@@ -378,7 +392,7 @@ function onChar(ch){
   if(ch===" "){
     if(S.ci===0)return;
     const cur=S.typed[S.wi];
-    if(cur===w){S.okWords++;sfx("word")}else{S.badWords++;$("w"+S.wi).classList.add("done-wrong")}
+    if(cur===w){S.okWords++;S.streak++;if(S.streak>S.bestStreak)S.bestStreak=S.streak;sfx("word")}else{S.badWords++;S.streak=0;$("w"+S.wi).classList.add("done-wrong")}
     if(mode==="words"&&S.okWords+S.badWords>=val){finish();return}
     S.wi++;S.ci=0;S.typed[S.wi]="";
     if(S.wi>=S.words.length){const more=pickWords();S.words=S.words.concat(more);appendWords(more,S.words.length-more.length)}
@@ -450,6 +464,7 @@ function finish(){
   $("rWpm").textContent=wpm;$("rAcc").textContent=acc+"%";
   $("rOk").textContent=S.okWords;$("rBad").textContent=S.badWords;
   $("rCons").textContent=consistency()+"%";$("rTime").textContent=S.elapsed;
+  $("rStreak").textContent=S.bestStreak;
   $("lvl").textContent=levelOf(wpm);
   const cr=$("chalRes");
   if(CHAL>0){
@@ -545,8 +560,17 @@ document.querySelectorAll("#modes button[data-mode]").forEach(b=>{
     mode=b.dataset.mode;val=+b.dataset.val;newTest();
   };
 });
-$("tashBtn").onclick=()=>{tash=!tash;if(tash){texts=false;$("textsBtn").classList.remove("on")}$("tashBtn").classList.toggle("on",tash);newTest()};
-$("textsBtn").onclick=()=>{texts=!texts;if(texts){tash=false;drill=false;$("tashBtn").classList.remove("on");$("drillBtn").classList.remove("on")}$("textsBtn").classList.toggle("on",texts);newTest()};
+$("tashBtn").onclick=()=>{tash=!tash;if(tash){texts=false;sent=false;drill=false;$("textsBtn").classList.remove("on");$("sentBtn").classList.remove("on");$("drillBtn").classList.remove("on")}$("tashBtn").classList.toggle("on",tash);newTest()};
+$("textsBtn").onclick=()=>{texts=!texts;if(texts){tash=false;drill=false;sent=false;$("tashBtn").classList.remove("on");$("drillBtn").classList.remove("on");$("sentBtn").classList.remove("on")}$("textsBtn").classList.toggle("on",texts);newTest()};
+$("sentBtn").onclick=()=>{sent=!sent;if(sent){tash=false;texts=false;drill=false;$("tashBtn").classList.remove("on");$("textsBtn").classList.remove("on");$("drillBtn").classList.remove("on")}$("sentBtn").classList.toggle("on",sent);newTest()};
+$("themeBtn").onclick=()=>{
+  const h=document.documentElement;
+  const light=h.dataset.theme==="light";
+  h.dataset.theme=light?"":"light";
+  $("themeBtn").textContent=light?"☀️":"🌙";
+  try{localStorage.setItem(LS+"-theme",light?"dark":"light")}catch(e){}
+};
+try{if(localStorage.getItem(LS+"-theme")==="light"){document.documentElement.dataset.theme="light";$("themeBtn").textContent="🌙"}}catch(e){}
 $("drillBtn").onclick=()=>{
   if(!drill&&Object.keys(errTotals()).length===0){
     $("drillBtn").textContent="العب اختبار الأول 😉";
@@ -554,7 +578,7 @@ $("drillBtn").onclick=()=>{
     return;
   }
   drill=!drill;
-  if(drill){tash=false;texts=false;$("tashBtn").classList.remove("on");$("textsBtn").classList.remove("on")}
+  if(drill){tash=false;texts=false;sent=false;$("tashBtn").classList.remove("on");$("textsBtn").classList.remove("on");$("sentBtn").classList.remove("on")}
   $("drillBtn").classList.toggle("on",drill);
   newTest();
 };
