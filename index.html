@@ -67,6 +67,12 @@ input#ghost{position:absolute;opacity:0;pointer-events:none;top:0;right:0;width:
 #kb .k.next{background:var(--acc);color:#1a1300;transform:translateY(-3px);box-shadow:0 4px 0 #b8912f}
 #kb .k.err{background:var(--bad);color:#fff}
 #kb .k.space{min-width:170px;font-family:'Tajawal';font-size:13px}
+#hist{display:none;gap:4px;align-items:flex-end;justify-content:center;height:44px;margin-bottom:12px}
+#hist.show{display:flex}
+#hist .hb{width:18px;background:var(--acc2);border-radius:4px 4px 0 0;min-height:4px;opacity:.85}
+#hist .hb.last{background:var(--acc)}
+canvas#chart{display:block;width:100%;max-width:520px;height:130px;margin:0 auto 16px;background:var(--card);border:1px solid var(--line);border-radius:14px}
+.sndBtn{font-family:inherit;font-size:16px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:6px 12px;cursor:pointer;color:var(--txt)}
 .overlay{
   position:fixed;inset:0;background:#0b0d1bee;backdrop-filter:blur(6px);
   display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:50;
@@ -117,6 +123,7 @@ footer a{color:var(--acc);text-decoration:none}
 <header>
   <div class="brand">سرعتك <span>بالعربي</span></div>
   <div class="best" id="bestBox" style="display:none">أفضل نتيجة: <b id="bestV">-</b> كلمة/دقيقة</div>
+  <button class="sndBtn" id="sndBtn" title="الصوت">🔊</button>
 </header>
 
 <div class="modes" id="modes">
@@ -135,6 +142,7 @@ footer a{color:var(--acc);text-decoration:none}
   <div class="stat"><div class="v" id="wpmV">0</div><div class="l">كلمة/دقيقة</div></div>
   <div class="stat"><div class="v" id="accV">100%</div><div class="l">الدقة</div></div>
 </div>
+<div id="hist" title="آخر 10 محاولات"></div>
 
 <div class="stage" id="stage" tabindex="0">
   <input id="ghost" autocomplete="off" autocapitalize="off" autocorrect="off">
@@ -163,6 +171,7 @@ footer a{color:var(--acc);text-decoration:none}
       <div class="g"><div class="v" id="rCons">0%</div><div class="l">الثبات</div></div>
       <div class="g"><div class="v" id="rTime">0</div><div class="l">الوقت (ثانية)</div></div>
     </div>
+    <canvas id="chart" width="1040" height="260"></canvas>
     <div class="errs" id="errBox" style="display:none">
       <h3>أكتر حروف غلطت فيها:</h3>
       <div class="chips" id="errChips"></div>
@@ -273,9 +282,57 @@ function tick(){
   if(!S||S.done)return;
   S.elapsed=Math.floor((Date.now()-S.startT)/1000);
   const mins=S.elapsed/60;
-  if(S.elapsed>0&&S.elapsed%2===0)S.wpmSeries.push(mins>0?S.okWords/mins:0);
+  if(S.elapsed>0&&S.elapsed!==S.lastSec){S.lastSec=S.elapsed;S.wpmSeries.push(mins>0?S.okWords/mins:0)}
   updHUD();
   if(mode==="time"&&S.elapsed>=val)finish();
+}
+let snd=true,AC=null;
+function beep(f,d,type,g){
+  if(!snd)return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    if(AC.state==="suspended")AC.resume();
+    const o=AC.createOscillator(),ga=AC.createGain();
+    o.type=type||"triangle";o.frequency.value=f;
+    ga.gain.setValueAtTime(g||0.04,AC.currentTime);
+    ga.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+d);
+    o.connect(ga);ga.connect(AC.destination);
+    o.start();o.stop(AC.currentTime+d);
+  }catch(e){}
+}
+function sfx(k){if(k==="ok")beep(560+Math.random()*160,0.05);else if(k==="err")beep(140,0.14,"sawtooth",0.06);else if(k==="word")beep(880,0.07);else if(k==="win"){beep(523,0.12);setTimeout(()=>beep(659,0.12),120);setTimeout(()=>beep(784,0.2),240)}}
+function pushHist(wpm){
+  try{
+    const h=JSON.parse(localStorage.getItem(LS+"-h")||"[]");
+    h.push({w:wpm,t:Date.now()});
+    while(h.length>10)h.shift();
+    localStorage.setItem(LS+"-h",JSON.stringify(h));
+  }catch(e){}
+  renderHist();
+}
+function renderHist(){
+  let h=[];try{h=JSON.parse(localStorage.getItem(LS+"-h")||"[]")}catch(e){}
+  const el=$("hist");
+  if(!h.length){el.classList.remove("show");return}
+  const mx=Math.max(...h.map(x=>x.w),1);
+  el.innerHTML=h.map((x,i)=>'<div class="hb'+(i===h.length-1?' last':'')+'" style="height:'+Math.max(4,Math.round(40*x.w/mx))+'px" title="'+x.w+' كلمة/دقيقة"></div>').join("");
+  el.classList.add("show");
+}
+function drawChart(){
+  const cv=$("chart"),x=cv.getContext("2d");
+  const a=S.wpmSeries.length>=2?S.wpmSeries:[0,S.final?S.final.wpm:0];
+  const W=cv.width,H=cv.height,P=24;
+  x.clearRect(0,0,W,H);
+  const mx=Math.max(...a,10);
+  x.strokeStyle="#2b3160";x.lineWidth=1;
+  for(let i=1;i<4;i++){x.beginPath();x.moveTo(P,H*i/4);x.lineTo(W-P,H*i/4);x.stroke()}
+  x.strokeStyle="#ffd166";x.lineWidth=4;x.lineJoin="round";x.beginPath();
+  a.forEach((v,i)=>{const px=P+(W-2*P)*i/(a.length-1),py=H-P-(H-2*P)*v/mx;i?x.lineTo(px,py):x.moveTo(px,py)});
+  x.stroke();
+  x.fillStyle="#ffd166";
+  a.forEach((v,i)=>{const px=P+(W-2*P)*i/(a.length-1),py=H-P-(H-2*P)*v/mx;x.beginPath();x.arc(px,py,5,0,7);x.fill()});
+  x.fillStyle="#8b90b8";x.font="500 24px Tajawal";x.textAlign="right";x.direction="rtl";
+  x.fillText("سرعتك ثانية بثانية",W-P,H-6);
 }
 function onChar(ch){
   if(S.done)return;
@@ -284,7 +341,7 @@ function onChar(ch){
   if(ch===" "){
     if(S.ci===0)return;
     const cur=S.typed[S.wi];
-    if(cur===w)S.okWords++;else{S.badWords++;$("w"+S.wi).classList.add("done-wrong")}
+    if(cur===w){S.okWords++;sfx("word")}else{S.badWords++;$("w"+S.wi).classList.add("done-wrong")}
     if(mode==="words"&&S.okWords+S.badWords>=val){finish();return}
     S.wi++;S.ci=0;S.typed[S.wi]="";
     if(S.wi>=S.words.length){const more=pickWords();S.words=S.words.concat(more);appendWords(more,S.words.length-more.length)}
@@ -295,8 +352,8 @@ function onChar(ch){
   const d=$("w"+S.wi);
   if(S.ci<w.length){
     const sp=d.children[S.ci];
-    if(ch===exp){sp.classList.add("ok");S.okChars++}
-    else{sp.classList.add("bad");S.badChars++;S.errMap[exp]=(S.errMap[exp]||0)+1;kbErr(ch)}
+    if(ch===exp){sp.classList.add("ok");S.okChars++;sfx("ok")}
+    else{sp.classList.add("bad");S.badChars++;S.errMap[exp]=(S.errMap[exp]||0)+1;kbErr(ch);sfx("err")}
   }else{
     const s=document.createElement("span");s.className="c extra";s.textContent=ch;d.appendChild(s);
     S.badChars++;kbErr(ch);
@@ -363,6 +420,8 @@ function finish(){
   $("errChips").innerHTML=errs.map(([c,n])=>'<div class="chip"><b>'+c+'</b> <span>×'+n+'</span></div>').join("");
   $("ov").classList.add("show");
   S.final={wpm,acc};
+  if(wpm>0){pushHist(wpm);sfx("win")}
+  drawChart();
   showBest();
 }
 function drawCard(){
@@ -452,8 +511,9 @@ document.addEventListener("keydown",e=>{
 document.addEventListener("click",e=>{
   if(e.target===$("ov"))$("againBtn").click();
 });
+$("sndBtn").onclick=()=>{snd=!snd;$("sndBtn").textContent=snd?"🔊":"🔇"};
 $("footLink").textContent=location.host;
-buildKB();newTest();
+buildKB();renderHist();newTest();
 </script>
 </body>
 </html>
