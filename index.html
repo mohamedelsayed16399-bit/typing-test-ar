@@ -135,6 +135,7 @@ footer a{color:var(--acc);text-decoration:none}
   <button data-mode="words" data-val="50">٥٠ كلمة</button>
   <div class="sep"></div>
   <button id="tashBtn">بالتشكيل</button>
+  <button id="textsBtn">📖 نصوص</button>
 </div>
 
 <div class="stats">
@@ -149,6 +150,7 @@ footer a{color:var(--acc);text-decoration:none}
   <div class="words" id="words"></div>
 </div>
 <div class="hint">اضغط على الكلمات وابدأ الكتابة فورًا — المسطرة بين كل كلمة والتانية</div>
+<div class="hint" id="chal" style="display:none;color:var(--acc);font-weight:700"></div>
 
 <div id="kb"></div>
 
@@ -176,6 +178,7 @@ footer a{color:var(--acc);text-decoration:none}
       <h3>أكتر حروف غلطت فيها:</h3>
       <div class="chips" id="errChips"></div>
     </div>
+    <div class="level" id="chalRes" style="display:none"></div>
     <div class="namein">
       <input id="nameIn" maxlength="20" placeholder="اسمك على الصورة (اختياري)">
     </div>
@@ -184,6 +187,7 @@ footer a{color:var(--acc);text-decoration:none}
       <button class="btn p" id="cardBtn">🖼️ اصنع صورة النتيجة</button>
       <button class="btn s" id="shareBtn" style="display:none">📤 شاركها</button>
       <button class="btn s" id="dlBtn" style="display:none">⬇️ حمّلها</button>
+      <button class="btn s" id="chalBtn">⚔️ لينك التحدي</button>
       <button class="btn s" id="againBtn">🔁 من تاني</button>
     </div>
   </div>
@@ -191,8 +195,21 @@ footer a{color:var(--acc);text-decoration:none}
 <script>
 "use strict";
 const $=id=>document.getElementById(id);
+let CHAL=0;
+try{const m=location.hash.match(/c=(\d+)/);if(m)CHAL=+m[1]}catch(e){}
 const BANK=("الوقت الناس الحياة الكتاب القلم البيت المدرسة الطريق الشمس القمر البحر الجبل الشجرة الزهرة الماء النار الهواء الأرض السماء النجوم الصباح المساء الليل النهار الفرح الحزن الحب السلام الحرب السيف الدرع القلب الروح العقل الجسد اليد العين الأذن الفم الرأس القدم الصوت الصمت النور الظل الحلم الأمل الخوف الشجاعة الصبر الحكمة الجهل العلم الجهل المعلم الطالب الدرس الامتحان النجاح الفشل المحاولة البداية النهاية الطريق السفر الرحلة الوطن الغربة الأهل الأصدقاء الجار السوق المال الذهب الفضة الخبز العسل التمر العنب التفاح البرتقال الليمون النعناع الشاي القهوة الحليب الجبن الزيتون الرمان الكرز الخوخ المشمش البطيخ الفراولة الموز جوز الهند اللوز الجوز البندق الفستق السمك الدجاج اللحم الأرز الفول العدس الحمص الطحينة الفلافل الشاورما الكشري الملوخية البامية المحشي الكبسة المندي البرياني السمبوسة الكنافة البقلاوة أم علي البسبوسة القطايف اللقيمات الجريش الهريس الثريد المرقوق العصيدة التمر هندي البركة الحبة السوداء الحلبة الزعتر الريحان النعناع البقدونس الشبت الكزبرة الثوم البصل الفلفل الكمون الكركم القرفة الهيل الزنجبيل القرنفل الورد الياسمين الفل النيل الفرات دجلة البحر النهر الوادي الصحراء الواحة النخلة السعف الجذع الغصن الورقة الثمرة البذرة الحقل المزرعة الحصاد القمح الشعير الذرة السمسم الكتان القطن الصوف الحرير الكتان الخيش القماش الخياطة الإبرة الخيط الزر الجيب الكم القبعة العمامة الحذاء النعل الخف الجورب المعطف العباءة الجلباب الفستان القميص البنطلون الحزام الساعة الخاتم العقد الحلق السلسلة المفتاح القفل الباب الشباك الدرج السقف الحائط الأرضية السجادة الستارة الوسادة البطانية السرير المخدة الدولاب الرف الكرسي الطاولة المصباح الشمعة المرآة المشط الفرشاة الصابون المنشفة الدلو الحبل السلم الحفارة المطرقة المسمار المنشار المفك الكماشة السلك البطارية الشاحن الكهرباء النور الظلام الغسالة الثلاجة الفرن البوتاجاز الميكروويف الغلاية القدر المقلاة الصحن الكوب الملعقة الشوكة السكين الصينية المائدة").split(" ");
 const TASH="الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ الرَّحْمَنِ الرَّحِيمِ مَالِكِ يَوْمِ الدِّينِ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ الْعِلْمُ فِي الصِّغَرِ كَالنَّقْشِ عَلَى الْحَجَرِ مَنْ حَسَّنَ خُلُقَهُ حَسُنَتْ حَيَاتُهُ الصَّبْرُ مِفْتَاحُ الْفَرَجِ خَيْرُ الْكَلَامِ مَا قَلَّ وَدَلَّ".split(" ");
+const TEXTS=[
+"على قدر أهل العزم تأتي العزائم وتأتي على قدر الكرام المكارم وتعظم في عين الصغير صغارها وتصغر في عين العظيم العظائم",
+"إذا الشعب يوما أراد الحياة فلا بد أن يستجيب القدر ولا بد لليل أن ينجلي ولا بد للقيد أن ينكسر",
+"ما كل ما يتمنى المرء يدركه تجري الرياح بما لا تشتهي السفن",
+"العلم يبني بيوتا لا عماد لها والجهل يهدم بيت العز والكرم",
+"ومن يك ذا فضل فيبخل بفضله على قومه يستغن عنه ويذمم",
+"ألا ليت الشباب يعود يوما فأخبره بما فعل المشيب",
+"الصديق وقت الضيق صديق حقيقي والكلمة الطيبة صدقة ومن حفر حفرة لأخيه وقع فيها",
+"إذا كنت في كل الأمور معاتبا صديقك لم تلق الذي لا تعاتبه"
+];
+let texts=false;
 const KB_ROWS=["ض ص ث ق ف غ ع ه خ ح ج د".split(" "),"ش س ي ب ل ا ت ن م ك ط".split(" "),"ئ ء ؤ ر لا ى ة و ز ظ".split(" ")];
 let S=null;
 const LS="typing-test-ar-v1";
@@ -200,6 +217,13 @@ function saveBest(m,w){try{const b=JSON.parse(localStorage.getItem(LS)||"{}");if
 function getBest(m){try{return (JSON.parse(localStorage.getItem(LS)||"{}"))[m]||0}catch(e){return 0}}
 let mode="time",val=60,tash=false;
 function pickWords(){
+  if(texts){
+    let out=[];
+    while(out.length<(mode==="words"?val:150)){
+      out=out.concat(TEXTS[Math.floor(Math.random()*TEXTS.length)].split(" "));
+    }
+    return out;
+  }
   const src=tash?TASH:BANK;
   const n=mode==="words"?val:(tash?40:120);
   const out=[];
@@ -247,6 +271,8 @@ function kbErr(ch){
   if(el){el.classList.add("err");setTimeout(()=>el.classList.remove("err"),250)}
 }
 function newTest(){
+  const cb=$("chal");
+  if(CHAL>0){cb.style.display="block";cb.textContent="⚔️ صاحبك جاب "+CHAL+" كلمة/دقيقة — جاهز تتغلب عليه؟"}else{cb.style.display="none"}
   S={words:pickWords(),wi:0,ci:0,typed:[""],started:false,startT:0,elapsed:0,
      okChars:0,badChars:0,okWords:0,badWords:0,errMap:{},wpmSeries:[],timer:null,done:false};
   $("ov").classList.remove("show");
@@ -262,7 +288,7 @@ function showBest(){
   $("bestBox").style.display=b?"block":"none";
   if(b)$("bestV").textContent=b;
 }
-function modeKey(){return mode+"-"+val+(tash?"-t":"")}
+function modeKey(){return mode+"-"+val+(tash?"-t":"")+(texts?"-x":"")}
 function updHUD(){
   if(!S)return;
   let t;
@@ -414,6 +440,11 @@ function finish(){
   $("rOk").textContent=S.okWords;$("rBad").textContent=S.badWords;
   $("rCons").textContent=consistency()+"%";$("rTime").textContent=S.elapsed;
   $("lvl").textContent=levelOf(wpm);
+  const cr=$("chalRes");
+  if(CHAL>0){
+    cr.style.display="block";
+    cr.textContent=wpm>CHAL?"🏆 كسبت التحدي! أنت "+wpm+" مقابل "+CHAL:(wpm===CHAL?"🤝 تعادل! الاتنين "+wpm:"😅 خسرت التحدي: أنت "+wpm+" مقابل "+CHAL+" — حاول تاني");
+  }else{cr.style.display="none"}
   $("newBest").style.display=isNew&&wpm>0?"block":"none";
   const errs=Object.entries(S.errMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
   $("errBox").style.display=errs.length?"block":"none";
@@ -485,6 +516,12 @@ $("shareBtn").onclick=async()=>{
     }
   }catch(e){}
 };
+$("chalBtn").onclick=async()=>{
+  const u=location.origin+location.pathname+"#c="+S.final.wpm;
+  const txt="⚔️ أنا جبت "+S.final.wpm+" كلمة/دقيقة في اختبار سرعة الكتابة بالعربي — تقدر تتغلب عليّا؟ "+u;
+  try{await navigator.clipboard.writeText(txt);$("chalBtn").textContent="✅ اللينك اتنسخ!"}catch(e){$("chalBtn").textContent=u}
+  setTimeout(()=>$("chalBtn").textContent="⚔️ لينك التحدي",2000);
+};
 $("againBtn").onclick=()=>newTest();
 document.querySelectorAll("#modes button[data-mode]").forEach(b=>{
   b.onclick=()=>{
@@ -493,7 +530,8 @@ document.querySelectorAll("#modes button[data-mode]").forEach(b=>{
     mode=b.dataset.mode;val=+b.dataset.val;newTest();
   };
 });
-$("tashBtn").onclick=()=>{tash=!tash;$("tashBtn").classList.toggle("on",tash);newTest()};
+$("tashBtn").onclick=()=>{tash=!tash;if(tash){texts=false;$("textsBtn").classList.remove("on")}$("tashBtn").classList.toggle("on",tash);newTest()};
+$("textsBtn").onclick=()=>{texts=!texts;if(texts){tash=false;$("tashBtn").classList.remove("on")}$("textsBtn").classList.toggle("on",texts);newTest()};
 const stage=$("stage"),ghost=$("ghost");
 stage.addEventListener("click",()=>ghost.focus());
 ghost.addEventListener("input",e=>{
