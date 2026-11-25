@@ -136,6 +136,7 @@ footer a{color:var(--acc);text-decoration:none}
   <div class="sep"></div>
   <button id="tashBtn">بالتشكيل</button>
   <button id="textsBtn">📖 نصوص</button>
+  <button id="drillBtn">🎯 تدريب أخطائي</button>
 </div>
 
 <div class="stats">
@@ -151,6 +152,7 @@ footer a{color:var(--acc);text-decoration:none}
 </div>
 <div class="hint">اضغط على الكلمات وابدأ الكتابة فورًا — المسطرة بين كل كلمة والتانية</div>
 <div class="hint" id="chal" style="display:none;color:var(--acc);font-weight:700"></div>
+<div class="hint" id="weak" style="display:none"></div>
 
 <div id="kb"></div>
 
@@ -209,7 +211,8 @@ const TEXTS=[
 "الصديق وقت الضيق صديق حقيقي والكلمة الطيبة صدقة ومن حفر حفرة لأخيه وقع فيها",
 "إذا كنت في كل الأمور معاتبا صديقك لم تلق الذي لا تعاتبه"
 ];
-let texts=false;
+let texts=false,drill=false;
+function errTotals(){try{return JSON.parse(localStorage.getItem(LS+"-e")||"{}")}catch(e){return{}}}
 const KB_ROWS=["ض ص ث ق ف غ ع ه خ ح ج د".split(" "),"ش س ي ب ل ا ت ن م ك ط".split(" "),"ئ ء ؤ ر لا ى ة و ز ظ".split(" ")];
 let S=null;
 const LS="typing-test-ar-v1";
@@ -217,6 +220,14 @@ function saveBest(m,w){try{const b=JSON.parse(localStorage.getItem(LS)||"{}");if
 function getBest(m){try{return (JSON.parse(localStorage.getItem(LS)||"{}"))[m]||0}catch(e){return 0}}
 let mode="time",val=60,tash=false;
 function pickWords(){
+  if(drill){
+    const weak=Object.entries(errTotals()).sort((a,b)=>b[1]-a[1]).slice(0,5).map(x=>x[0]);
+    const pool=BANK.filter(w=>weak.some(c=>w.includes(c)));
+    const src=pool.length>=10?pool:BANK;
+    const out=[];
+    for(let i=0;i<(mode==="words"?val:100);i++)out.push(src[Math.floor(Math.random()*src.length)]);
+    return out;
+  }
   if(texts){
     let out=[];
     while(out.length<(mode==="words"?val:150)){
@@ -288,7 +299,7 @@ function showBest(){
   $("bestBox").style.display=b?"block":"none";
   if(b)$("bestV").textContent=b;
 }
-function modeKey(){return mode+"-"+val+(tash?"-t":"")+(texts?"-x":"")}
+function modeKey(){return mode+"-"+val+(tash?"-t":"")+(texts?"-x":"")+(drill?"-d":"")}
 function updHUD(){
   if(!S)return;
   let t;
@@ -451,6 +462,10 @@ function finish(){
   $("errChips").innerHTML=errs.map(([c,n])=>'<div class="chip"><b>'+c+'</b> <span>×'+n+'</span></div>').join("");
   $("ov").classList.add("show");
   S.final={wpm,acc};
+  const et=errTotals();
+  for(const c in S.errMap)et[c]=(et[c]||0)+S.errMap[c];
+  try{localStorage.setItem(LS+"-e",JSON.stringify(et))}catch(e){}
+  renderWeak();
   if(wpm>0){pushHist(wpm);sfx("win")}
   drawChart();
   showBest();
@@ -531,7 +546,25 @@ document.querySelectorAll("#modes button[data-mode]").forEach(b=>{
   };
 });
 $("tashBtn").onclick=()=>{tash=!tash;if(tash){texts=false;$("textsBtn").classList.remove("on")}$("tashBtn").classList.toggle("on",tash);newTest()};
-$("textsBtn").onclick=()=>{texts=!texts;if(texts){tash=false;$("tashBtn").classList.remove("on")}$("textsBtn").classList.toggle("on",texts);newTest()};
+$("textsBtn").onclick=()=>{texts=!texts;if(texts){tash=false;drill=false;$("tashBtn").classList.remove("on");$("drillBtn").classList.remove("on")}$("textsBtn").classList.toggle("on",texts);newTest()};
+$("drillBtn").onclick=()=>{
+  if(!drill&&Object.keys(errTotals()).length===0){
+    $("drillBtn").textContent="العب اختبار الأول 😉";
+    setTimeout(()=>$("drillBtn").textContent="🎯 تدريب أخطائي",1600);
+    return;
+  }
+  drill=!drill;
+  if(drill){tash=false;texts=false;$("tashBtn").classList.remove("on");$("textsBtn").classList.remove("on")}
+  $("drillBtn").classList.toggle("on",drill);
+  newTest();
+};
+function renderWeak(){
+  const t=Object.entries(errTotals()).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const el=$("weak");
+  if(!t.length){el.style.display="none";return}
+  el.style.display="block";
+  el.innerHTML="أصعب حروفك: "+t.map(x=>'<b style="color:var(--bad);font-family:Amiri;font-size:17px">'+x[0]+'</b>').join("، ");
+}
 const stage=$("stage"),ghost=$("ghost");
 stage.addEventListener("click",()=>ghost.focus());
 ghost.addEventListener("input",e=>{
@@ -551,7 +584,7 @@ document.addEventListener("click",e=>{
 });
 $("sndBtn").onclick=()=>{snd=!snd;$("sndBtn").textContent=snd?"🔊":"🔇"};
 $("footLink").textContent=location.host;
-buildKB();renderHist();newTest();
+buildKB();renderHist();renderWeak();newTest();
 </script>
 </body>
 </html>
