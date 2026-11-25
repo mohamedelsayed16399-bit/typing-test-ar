@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>سرعتك بالعربي | اختبار سرعة الكتابة</title>
+<meta name="description" content="اختبر سرعة كتابتك باللغة العربية: كلمات في الدقيقة، الدقة، خريطة أخطائك، وصورة نتيجة تشاركها مع أصحابك.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f1220;--bg2:#171b31;--card:#1d2242;--line:#2b3160;
+  --txt:#e8eaf6;--dim:#8b90b8;--acc:#ffd166;--acc2:#7c5cff;
+  --ok:#4ade80;--bad:#f87171;--cur:#ffd166;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:radial-gradient(1200px 700px at 80% -10%,#252b55 0%,var(--bg) 55%);
+  color:var(--txt);font-family:'Tajawal',system-ui,sans-serif;
+  min-height:100%;display:flex;flex-direction:column;align-items:center;
+  padding:14px 12px 40px;
+}
+.wrap{width:100%;max-width:860px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.brand{font-size:26px;font-weight:800}
+.brand span{color:var(--acc)}
+.best{font-size:13px;color:var(--dim);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:6px 12px}
+.best b{color:var(--acc);font-size:15px}
+.modes{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:8px;margin-bottom:14px}
+.modes button{
+  font-family:inherit;font-size:14px;font-weight:700;color:var(--dim);
+  background:transparent;border:none;border-radius:9px;padding:7px 13px;cursor:pointer;transition:.15s;
+}
+.modes button.on{background:var(--acc);color:#1a1300}
+.modes .sep{width:1px;background:var(--line);margin:2px 2px}
+.stats{display:flex;gap:10px;justify-content:center;margin-bottom:12px}
+.stat{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:8px 18px;text-align:center;min-width:96px}
+.stat .v{font-size:26px;font-weight:800;color:var(--acc);line-height:1.1}
+.stat .l{font-size:12px;color:var(--dim)}
+#timer .v{color:var(--acc2)}
+.stage{position:relative;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 20px;cursor:text;min-height:0;outline:none}
+.stage:focus{box-shadow:0 0 0 2px var(--acc2)}
+.words{
+  font-family:'Amiri',serif;font-size:30px;line-height:2.1;
+  display:flex;flex-wrap:wrap;gap:0 14px;user-select:none;
+  max-height:210px;overflow:hidden;
+}
+.words.tash{font-size:33px}
+.w{position:relative;color:var(--dim);border-bottom:3px solid transparent}
+.w.cur{border-bottom-color:var(--cur);animation:pulse 1s infinite}
+@keyframes pulse{50%{border-bottom-color:transparent}}
+.w .c.ok{color:var(--txt)}
+.w .c.bad{color:var(--bad);text-decoration:underline}
+.w .c.extra{color:#b91c1c;background:#7f1d1d55;border-radius:4px}
+.w.done-wrong{color:var(--bad)}
+input#ghost{position:absolute;opacity:0;pointer-events:none;top:0;right:0;width:1px;height:1px}
+.hint{text-align:center;color:var(--dim);font-size:13px;margin-top:10px}
+#kb{display:flex;flex-direction:column;gap:6px;margin-top:16px;align-items:center}
+#kb .row{display:flex;gap:5px;direction:ltr;flex-wrap:nowrap;justify-content:center}
+#kb .k{
+  min-width:34px;height:42px;padding:0 8px;display:flex;align-items:center;justify-content:center;
+  background:var(--bg2);border:1px solid var(--line);border-radius:8px;
+  font-family:'Amiri',serif;font-size:19px;color:var(--dim);transition:.12s;
+}
+#kb .k.next{background:var(--acc);color:#1a1300;transform:translateY(-3px);box-shadow:0 4px 0 #b8912f}
+#kb .k.err{background:var(--bad);color:#fff}
+#kb .k.space{min-width:170px;font-family:'Tajawal';font-size:13px}
+.overlay{
+  position:fixed;inset:0;background:#0b0d1bee;backdrop-filter:blur(6px);
+  display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:50;
+}
+.overlay.show{display:flex}
+.panel{background:var(--bg2);border:1px solid var(--line);border-radius:22px;padding:26px 22px;width:100%;max-width:640px;text-align:center}
+.panel h2{font-size:24px;margin-bottom:4px}
+.level{font-size:15px;color:var(--acc);font-weight:700;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px}
+.g{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 6px}
+.g .v{font-size:26px;font-weight:800;color:var(--acc)}
+.g .l{font-size:12px;color:var(--dim)}
+.newbest{display:none;background:#14532d;color:#bbf7d0;border-radius:10px;padding:6px 12px;font-size:13px;font-weight:700;margin-bottom:12px}
+.errs{margin:0 auto 16px;max-width:520px}
+.errs h3{font-size:14px;color:var(--dim);margin-bottom:8px;font-weight:500}
+.errs .chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.chip{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:5px 12px;font-size:15px}
+.chip b{color:var(--bad);font-family:'Amiri',serif;font-size:19px}
+.chip span{color:var(--dim);font-size:12px}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{
+  font-family:inherit;font-size:15px;font-weight:800;border:none;border-radius:12px;
+  padding:12px 22px;cursor:pointer;transition:.15s;
+}
+.btn.p{background:var(--acc);color:#1a1300}
+.btn.s{background:var(--card);color:var(--txt);border:1px solid var(--line)}
+.btn:active{transform:scale(.96)}
+.namein{margin-bottom:14px;display:flex;gap:8px;justify-content:center}
+.namein input{
+  font-family:inherit;font-size:15px;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:9px 14px;color:var(--txt);width:200px;text-align:center;
+}
+canvas#card{display:none;width:270px;height:337px;border-radius:14px;border:1px solid var(--line);margin:0 auto 14px}
+canvas#card.show{display:block}
+footer{margin-top:26px;text-align:center;color:var(--dim);font-size:12px;line-height:2}
+footer a{color:var(--acc);text-decoration:none}
+@media(max-width:640px){
+  .words{font-size:24px}
+  .words.tash{font-size:27px}
+  #kb .k{min-width:28px;height:38px;font-size:16px;padding:0 5px}
+  .brand{font-size:22px}
+  .stat{min-width:80px;padding:6px 10px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand">سرعتك <span>بالعربي</span></div>
+  <div class="best" id="bestBox" style="display:none">أفضل نتيجة: <b id="bestV">-</b> كلمة/دقيقة</div>
+</header>
+
+<div class="modes" id="modes">
+  <button data-mode="time" data-val="30">٣٠ ثانية</button>
+  <button data-mode="time" data-val="60" class="on">٦٠ ثانية</button>
+  <button data-mode="time" data-val="120">١٢٠ ثانية</button>
+  <div class="sep"></div>
+  <button data-mode="words" data-val="25">٢٥ كلمة</button>
+  <button data-mode="words" data-val="50">٥٠ كلمة</button>
+  <div class="sep"></div>
+  <button id="tashBtn">بالتشكيل</button>
+</div>
+
+<div class="stats">
+  <div class="stat" id="timer"><div class="v" id="timeV">--</div><div class="l" id="timeL">الوقت</div></div>
+  <div class="stat"><div class="v" id="wpmV">0</div><div class="l">كلمة/دقيقة</div></div>
+  <div class="stat"><div class="v" id="accV">100%</div><div class="l">الدقة</div></div>
+</div>
+
+<div class="stage" id="stage" tabindex="0">
+  <input id="ghost" autocomplete="off" autocapitalize="off" autocorrect="off">
+  <div class="words" id="words"></div>
+</div>
+<div class="hint">اضغط على الكلمات وابدأ الكتابة فورًا — المسطرة بين كل كلمة والتانية</div>
+
+<div id="kb"></div>
+
+<footer>
+  اختبار سرعة كتابة عربي مجاني — تحدَّ نفسك وشارك نتيجتك<br>
+  <span id="footLink"></span>
+</footer>
+</div>
+
+<div class="overlay" id="ov">
+  <div class="panel">
+    <h2>النتيجة 🏁</h2>
+    <div class="level" id="lvl"></div>
+    <div class="newbest" id="newBest">🎉 رقم قياسي جديد!</div>
+    <div class="grid">
+      <div class="g"><div class="v" id="rWpm">0</div><div class="l">كلمة/دقيقة</div></div>
+      <div class="g"><div class="v" id="rAcc">0%</div><div class="l">الدقة</div></div>
+      <div class="g"><div class="v" id="rOk">0</div><div class="l">كلمات صح</div></div>
+      <div class="g"><div class="v" id="rBad">0</div><div class="l">كلمات غلط</div></div>
+      <div class="g"><div class="v" id="rCons">0%</div><div class="l">الثبات</div></div>
+      <div class="g"><div class="v" id="rTime">0</div><div class="l">الوقت (ثانية)</div></div>
+    </div>
+    <div class="errs" id="errBox" style="display:none">
+      <h3>أكتر حروف غلطت فيها:</h3>
+      <div class="chips" id="errChips"></div>
+    </div>
+    <div class="namein">
+      <input id="nameIn" maxlength="20" placeholder="اسمك على الصورة (اختياري)">
+    </div>
+    <canvas id="card" width="1080" height="1350"></canvas>
+    <div class="btns">
+      <button class="btn p" id="cardBtn">🖼️ اصنع صورة النتيجة</button>
+      <button class="btn s" id="shareBtn" style="display:none">📤 شاركها</button>
+      <button class="btn s" id="dlBtn" style="display:none">⬇️ حمّلها</button>
+      <button class="btn s" id="againBtn">🔁 من تاني</button>
+    </div>
+  </div>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const BANK=("الوقت الناس الحياة الكتاب القلم البيت المدرسة الطريق الشمس القمر البحر الجبل الشجرة الزهرة الماء النار الهواء الأرض السماء النجوم الصباح المساء الليل النهار الفرح الحزن الحب السلام الحرب السيف الدرع القلب الروح العقل الجسد اليد العين الأذن الفم الرأس القدم الصوت الصمت النور الظل الحلم الأمل الخوف الشجاعة الصبر الحكمة الجهل العلم الجهل المعلم الطالب الدرس الامتحان النجاح الفشل المحاولة البداية النهاية الطريق السفر الرحلة الوطن الغربة الأهل الأصدقاء الجار السوق المال الذهب الفضة الخبز العسل التمر العنب التفاح البرتقال الليمون النعناع الشاي القهوة الحليب الجبن الزيتون الرمان الكرز الخوخ المشمش البطيخ الفراولة الموز جوز الهند اللوز الجوز البندق الفستق السمك الدجاج اللحم الأرز الفول العدس الحمص الطحينة الفلافل الشاورما الكشري الملوخية البامية المحشي الكبسة المندي البرياني السمبوسة الكنافة البقلاوة أم علي البسبوسة القطايف اللقيمات الجريش الهريس الثريد المرقوق العصيدة التمر هندي البركة الحبة السوداء الحلبة الزعتر الريحان النعناع البقدونس الشبت الكزبرة الثوم البصل الفلفل الكمون الكركم القرفة الهيل الزنجبيل القرنفل الورد الياسمين الفل النيل الفرات دجلة البحر النهر الوادي الصحراء الواحة النخلة السعف الجذع الغصن الورقة الثمرة البذرة الحقل المزرعة الحصاد القمح الشعير الذرة السمسم الكتان القطن الصوف الحرير الكتان الخيش القماش الخياطة الإبرة الخيط الزر الجيب الكم القبعة العمامة الحذاء النعل الخف الجورب المعطف العباءة الجلباب الفستان القميص البنطلون الحزام الساعة الخاتم العقد الحلق السلسلة المفتاح القفل الباب الشباك الدرج السقف الحائط الأرضية السجادة الستارة الوسادة البطانية السرير المخدة الدولاب الرف الكرسي الطاولة المصباح الشمعة المرآة المشط الفرشاة الصابون المنشفة الدلو الحبل السلم الحفارة المطرقة المسمار المنشار المفك الكماشة السلك البطارية الشاحن الكهرباء النور الظلام الغسالة الثلاجة الفرن البوتاجاز الميكروويف الغلاية القدر المقلاة الصحن الكوب الملعقة الشوكة السكين الصينية المائدة").split(" ");
+const TASH="الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ الرَّحْمَنِ الرَّحِيمِ مَالِكِ يَوْمِ الدِّينِ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ قُلْ هُوَ اللَّهُ أَحَدٌ اللَّهُ الصَّمَدُ لَمْ يَلِدْ وَلَمْ يُولَدْ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ الْعِلْمُ فِي الصِّغَرِ كَالنَّقْشِ عَلَى الْحَجَرِ مَنْ حَسَّنَ خُلُقَهُ حَسُنَتْ حَيَاتُهُ الصَّبْرُ مِفْتَاحُ الْفَرَجِ خَيْرُ الْكَلَامِ مَا قَلَّ وَدَلَّ".split(" ");
+const KB_ROWS=["ض ص ث ق ف غ ع ه خ ح ج د".split(" "),"ش س ي ب ل ا ت ن م ك ط".split(" "),"ئ ء ؤ ر لا ى ة و ز ظ".split(" ")];
+let S=null;
+const LS="typing-test-ar-v1";
+function saveBest(m,w){try{const b=JSON.parse(localStorage.getItem(LS)||"{}");if(!b[m]||w>b[m]){b[m]=w;localStorage.setItem(LS,JSON.stringify(b));return true}return false}catch(e){return false}}
+function getBest(m){try{return (JSON.parse(localStorage.getItem(LS)||"{}"))[m]||0}catch(e){return 0}}
+let mode="time",val=60,tash=false;
+function pickWords(){
+  const src=tash?TASH:BANK;
+  const n=mode==="words"?val:(tash?40:120);
+  const out=[];
+  for(let i=0;i<n;i++)out.push(src[Math.floor(Math.random()*src.length)]);
+  return out;
+}
+function render(){
+  const wEl=$("words");wEl.innerHTML="";wEl.classList.toggle("tash",tash);
+  S.words.forEach((w,wi)=>{
+    const d=document.createElement("div");d.className="w";d.id="w"+wi;
+    for(const ch of w){const s=document.createElement("span");s.className="c";s.textContent=ch;d.appendChild(s)}
+    wEl.appendChild(d);
+  });
+  markCur();
+}
+function markCur(){
+  document.querySelectorAll(".w.cur").forEach(e=>e.classList.remove("cur"));
+  const el=$("w"+S.wi);if(el){el.classList.add("cur");el.scrollIntoView({block:"center",behavior:"smooth"})}
+  const w=S.words[S.wi];
+  const nxt=w&&w[S.ci]?w[S.ci]:" ";
+  kbNext(nxt);
+}
+function kbNext(ch){
+  document.querySelectorAll("#kb .k").forEach(k=>k.classList.remove("next"));
+  const t=ch===" "?"space":ch;
+  const el=document.querySelector('#kb .k[data-k="'+CSS.escape(t)+'"]');
+  if(el)el.classList.add("next");
+}
+function buildKB(){
+  const kb=$("kb");kb.innerHTML="";
+  KB_ROWS.forEach(r=>{
+    const row=document.createElement("div");row.className="row";
+    r.forEach(k=>{
+      const d=document.createElement("div");d.className="k";d.dataset.k=k;d.textContent=k;row.appendChild(d);
+    });
+    kb.appendChild(row);
+  });
+  const row=document.createElement("div");row.className="row";
+  const sp=document.createElement("div");sp.className="k space";sp.dataset.k="space";sp.textContent="مسطرة";
+  row.appendChild(sp);kb.appendChild(row);
+}
+function kbErr(ch){
+  const t=ch===" "?"space":ch;
+  const el=document.querySelector('#kb .k[data-k="'+CSS.escape(t)+'"]');
+  if(el){el.classList.add("err");setTimeout(()=>el.classList.remove("err"),250)}
+}
+function newTest(){
+  S={words:pickWords(),wi:0,ci:0,typed:[""],started:false,startT:0,elapsed:0,
+     okChars:0,badChars:0,okWords:0,badWords:0,errMap:{},wpmSeries:[],timer:null,done:false};
+  $("ov").classList.remove("show");
+  $("card").classList.remove("show");
+  $("shareBtn").style.display="none";$("dlBtn").style.display="none";
+  $("timeL").textContent=mode==="time"?"الوقت الباقي":"الكلمات";
+  updHUD();render();
+  const g=$("ghost");g.value="";setTimeout(()=>g.focus(),50);
+  showBest();
+}
+function showBest(){
+  const b=getBest(modeKey());
+  $("bestBox").style.display=b?"block":"none";
+  if(b)$("bestV").textContent=b;
+}
+function modeKey(){return mode+"-"+val+(tash?"-t":"")}
+function updHUD(){
+  if(!S)return;
+  let t;
+  if(mode==="time"){
+    t=S.started?Math.max(0,val-S.elapsed):val;
+    $("timeV").textContent=t;
+  }else{
+    $("timeV").textContent=S.okWords+"/"+val;
+  }
+  const mins=mode==="time"?((val-Math.max(0,val-S.elapsed))/60):(S.elapsed/60);
+  const wpm=mins>0.02?Math.round(S.okWords/mins):0;
+  $("wpmV").textContent=wpm;
+  const tot=S.okChars+S.badChars;
+  $("accV").textContent=(tot?Math.round(100*S.okChars/tot):100)+"%";
+}
+function tick(){
+  if(!S||S.done)return;
+  S.elapsed=Math.floor((Date.now()-S.startT)/1000);
+  const mins=S.elapsed/60;
+  if(S.elapsed>0&&S.elapsed%2===0)S.wpmSeries.push(mins>0?S.okWords/mins:0);
+  updHUD();
+  if(mode==="time"&&S.elapsed>=val)finish();
+}
+function onChar(ch){
+  if(S.done)return;
+  if(!S.started){S.started=true;S.startT=Date.now();S.timer=setInterval(tick,250)}
+  const w=S.words[S.wi];
+  if(ch===" "){
+    if(S.ci===0)return;
+    const cur=S.typed[S.wi];
+    if(cur===w)S.okWords++;else{S.badWords++;$("w"+S.wi).classList.add("done-wrong")}
+    if(mode==="words"&&S.okWords+S.badWords>=val){finish();return}
+    S.wi++;S.ci=0;S.typed[S.wi]="";
+    if(S.wi>=S.words.length){const more=pickWords();S.words=S.words.concat(more);appendWords(more,S.words.length-more.length)}
+    markCur();updHUD();return;
+  }
+  if(S.ci>=w.length+6)return;
+  const exp=w[S.ci];
+  const d=$("w"+S.wi);
+  if(S.ci<w.length){
+    const sp=d.children[S.ci];
+    if(ch===exp){sp.classList.add("ok");S.okChars++}
+    else{sp.classList.add("bad");S.badChars++;S.errMap[exp]=(S.errMap[exp]||0)+1;kbErr(ch)}
+  }else{
+    const s=document.createElement("span");s.className="c extra";s.textContent=ch;d.appendChild(s);
+    S.badChars++;kbErr(ch);
+  }
+  S.typed[S.wi]+=ch;S.ci++;markCur();updHUD();
+}
+function appendWords(arr,from){
+  const wEl=$("words");
+  arr.forEach((w,i)=>{
+    const wi=from+i;
+    const d=document.createElement("div");d.className="w";d.id="w"+wi;
+    for(const ch of w){const s=document.createElement("span");s.className="c";s.textContent=ch;d.appendChild(s)}
+    wEl.appendChild(d);
+  });
+}
+function onBackspace(){
+  if(S.done||!S.started)return;
+  const d=$("w"+S.wi);
+  if(S.ci===0)return;
+  S.ci--;
+  const w=S.words[S.wi];
+  const cur=S.typed[S.wi];
+  const ch=cur[S.ci];
+  S.typed[S.wi]=cur.slice(0,-1);
+  if(S.ci<w.length){
+    const sp=d.children[S.ci];
+    if(sp.classList.contains("ok")){sp.classList.remove("ok");S.okChars--}
+    else if(sp.classList.contains("bad")){sp.classList.remove("bad");S.badChars--}
+  }else{
+    const last=d.lastChild;
+    if(last&&last.classList.contains("extra")){d.removeChild(last);S.badChars--}
+  }
+  markCur();updHUD();
+}
+function consistency(){
+  const a=S.wpmSeries;if(a.length<3)return 100;
+  const m=a.reduce((x,y)=>x+y,0)/a.length;
+  const sd=Math.sqrt(a.reduce((x,y)=>x+(y-m)*(y-m),0)/a.length);
+  return Math.max(0,Math.round(100-(sd/(m||1))*100));
+}
+function levelOf(w){
+  if(w<15)return"🐣 مبتدئ — البداية دايمًا أصعب خطوة";
+  if(w<25)return"✏️ كاتب جديد — إيدك بدأت تسخن";
+  if(w<40)return"⚡ سريع — مستوى محترم جدًا";
+  if(w<55)return"🔥 محترف — سرعتك توقع في مكان شغل";
+  if(w<75)return"🚀 آلة كتابة — قليلين يوصلوا هنا";
+  return"👑 صقر الكيبورد — أسطورة حقيقية";
+}
+function finish(){
+  if(S.done)return;S.done=true;clearInterval(S.timer);
+  S.elapsed=mode==="time"?val:Math.max(1,Math.round((Date.now()-S.startT)/1000));
+  const mins=S.elapsed/60;
+  const wpm=Math.round(S.okWords/mins);
+  const tot=S.okChars+S.badChars;
+  const acc=tot?Math.round(100*S.okChars/tot):100;
+  const isNew=saveBest(modeKey(),wpm);
+  $("rWpm").textContent=wpm;$("rAcc").textContent=acc+"%";
+  $("rOk").textContent=S.okWords;$("rBad").textContent=S.badWords;
+  $("rCons").textContent=consistency()+"%";$("rTime").textContent=S.elapsed;
+  $("lvl").textContent=levelOf(wpm);
+  $("newBest").style.display=isNew&&wpm>0?"block":"none";
+  const errs=Object.entries(S.errMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  $("errBox").style.display=errs.length?"block":"none";
+  $("errChips").innerHTML=errs.map(([c,n])=>'<div class="chip"><b>'+c+'</b> <span>×'+n+'</span></div>').join("");
+  $("ov").classList.add("show");
+  S.final={wpm,acc};
+  showBest();
+}
+function drawCard(){
+  const cv=$("card"),x=cv.getContext("2d");
+  const name=$("nameIn").value.trim();
+  const {wpm,acc}=S.final;
+  const g=x.createLinearGradient(0,0,1080,1350);
+  g.addColorStop(0,"#1a1440");g.addColorStop(.55,"#0f1220");g.addColorStop(1,"#2b1b4d");
+  x.fillStyle=g;x.fillRect(0,0,1080,1350);
+  x.fillStyle="#7c5cff22";
+  x.beginPath();x.arc(140,160,320,0,7);x.fill();
+  x.beginPath();x.arc(980,1200,360,0,7);x.fill();
+  x.strokeStyle="#ffd166";x.lineWidth=10;
+  rr(x,40,40,1000,1270,46);x.stroke();
+  x.direction="rtl";x.textAlign="center";
+  x.fillStyle="#ffd166";x.font="800 64px Tajawal, sans-serif";
+  x.fillText("سرعتك بالعربي",540,180);
+  x.fillStyle="#8b90b8";x.font="500 34px Tajawal, sans-serif";
+  x.fillText("اختبار سرعة الكتابة بالعربية",540,240);
+  if(name){x.fillStyle="#e8eaf6";x.font="700 58px Tajawal, sans-serif";x.fillText(name,540,400)}
+  x.fillStyle="#ffd166";x.font="800 300px Tajawal, sans-serif";
+  x.fillText(String(wpm),540,name?760:720);
+  x.fillStyle="#e8eaf6";x.font="700 52px Tajawal, sans-serif";
+  x.fillText("كلمة في الدقيقة",540,name?850:810);
+  x.fillStyle="#8b90b8";x.font="500 42px Tajawal, sans-serif";
+  x.fillText(levelOf(wpm).split("—")[0].trim(),540,name?950:910);
+  stat(x,220,1080,"الدقة",acc+"%");
+  stat(x,540,1080,"كلمات صح",String(S.okWords));
+  stat(x,860,1080,"الثبات",consistency()+"%");
+  x.fillStyle="#5b608c";x.font="400 28px Tajawal, sans-serif";
+  x.fillText("متحديك تجرب سرعتك على نفس اللينك 👇",540,1230);
+  x.fillStyle="#ffd166";x.font="700 30px Tajawal, sans-serif";
+  x.fillText(location.host+location.pathname,540,1280);
+  cv.classList.add("show");
+  $("shareBtn").style.display="inline-block";
+  $("dlBtn").style.display="inline-block";
+  cv.scrollIntoView({block:"center",behavior:"smooth"});
+}
+function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
+function stat(x,cx,y,l,v){
+  x.fillStyle="#e8eaf6";x.font="800 56px Tajawal, sans-serif";x.fillText(v,cx,y);
+  x.fillStyle="#8b90b8";x.font="400 30px Tajawal, sans-serif";x.fillText(l,cx,y+44);
+}
+$("cardBtn").onclick=()=>{drawCard()};
+$("dlBtn").onclick=()=>{
+  const a=document.createElement("a");
+  a.download="نتيجتي-سرعة-الكتابة.png";
+  a.href=$("card").toDataURL("image/png");a.click();
+};
+$("shareBtn").onclick=async()=>{
+  try{
+    const blob=await new Promise(r=>$("card").toBlob(r,"image/png"));
+    const f=new File([blob],"typing-result.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[f]})){
+      await navigator.share({files:[f],title:"سرعتك بالعربي",text:"جبت "+S.final.wpm+" كلمة/دقيقة! جرّب تغلبني"});
+    }else{
+      const txt="جبت "+S.final.wpm+" كلمة/دقيقة في اختبار سرعة الكتابة بالعربي! جرّب تغلبني: "+location.href;
+      await navigator.clipboard.writeText(txt);
+      $("shareBtn").textContent="✅ اتنسخ!";
+      setTimeout(()=>$("shareBtn").textContent="📤 شاركها",1800);
+    }
+  }catch(e){}
+};
+$("againBtn").onclick=()=>newTest();
+document.querySelectorAll("#modes button[data-mode]").forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll("#modes button[data-mode]").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    mode=b.dataset.mode;val=+b.dataset.val;newTest();
+  };
+});
+$("tashBtn").onclick=()=>{tash=!tash;$("tashBtn").classList.toggle("on",tash);newTest()};
+const stage=$("stage"),ghost=$("ghost");
+stage.addEventListener("click",()=>ghost.focus());
+ghost.addEventListener("input",e=>{
+  const v=ghost.value;ghost.value="";
+  for(const ch of v)onChar(ch);
+});
+ghost.addEventListener("keydown",e=>{
+  if(e.key==="Backspace"){e.preventDefault();onBackspace()}
+  if(e.key==="Enter"){e.preventDefault()}
+});
+document.addEventListener("keydown",e=>{
+  if($("ov").classList.contains("show"))return;
+  if(document.activeElement!==ghost)ghost.focus();
+});
+document.addEventListener("click",e=>{
+  if(e.target===$("ov"))$("againBtn").click();
+});
+$("footLink").textContent=location.host;
+buildKB();newTest();
+</script>
+</body>
+</html>
